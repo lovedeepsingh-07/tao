@@ -1,8 +1,6 @@
 [package]
 name = "tao"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-bon = "3.5"
-thiserror = "2"

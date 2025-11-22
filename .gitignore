@@ -1,1 +1,9 @@
+build
+target
+.cache
+deps
+
+
+# Added by cargo
+
 /target

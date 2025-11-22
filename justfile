@@ -1,5 +1,8 @@
 default:
 	@just -l
 
-run example:
-	- cargo run --example {{example}}
+build:
+	@cargo build
+
+run:
+	@cargo run

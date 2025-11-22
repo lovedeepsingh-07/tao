@@ -1,3 +1,3 @@
 # tao
 
-totall absolute order
+total absolute order

@@ -1,27 +1,24 @@
 {
-  description = "oro-jackson";
+  description = "tao";
   inputs = {
-    nixpkgs.url =
-      "github:nixos/nixpkgs/ebe2788eafd539477f83775ef93c3c7e244421d3";
-    rust-overlay.url = "github:oxalica/rust-overlay";
-    rust_1_84_0-pkgs.url =
-      "github:nixos/nixpkgs/d98abf5cf5914e5e4e9d57205e3af55ca90ffc1d";
-    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:nixos/nixpkgs/d2ed99647a4b195f0bcc440f76edfa10aeb3b743";
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    flake-utils.url = "github:numtide/flake-utils/11707dc2f618dd54ca8739b309ec4fc024de578b";
   };
-  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }@inputs:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs = { ... }@inputs:
+    inputs.flake-utils.lib.eachDefaultSystem (system:
       let
-        overlays = [ (import rust-overlay) ];
-        pkgs = import nixpkgs { inherit system overlays; };
-        # rust-pkgs = inputs.rust_1_84_0-pkgs.legacyPackages.${system};
-      in {
+        pkgs = import inputs.nixpkgs { inherit system; overlays = [(import inputs.rust-overlay)]; };
+        rust-pkg = pkgs.rust-bin.stable."1.88.0".default;
+      in
+      {
         formatter = pkgs.nixfmt-classic;
-        devShell = pkgs.mkShell {
-          packages = [
-		  	pkgs.go-task
-
-            pkgs.rust-bin.stable."1.84.0".default
-          ];
+        devShells.default = pkgs.mkShell {
+          nativeBuildInputs = [ pkgs.cmake rust-pkg pkgs.pkg-config pkgs.bear ];
+		  shellHook = ''zsh'';
         };
       });
 }
