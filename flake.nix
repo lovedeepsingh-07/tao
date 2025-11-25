@@ -15,10 +15,7 @@
         cross-pkgs = pkgs.pkgsCross.mingwW64;
         rust-bin = inputs.rust-overlay.lib.mkRustBin { }
           pkgs.pkgsCross.mingwW64.buildPackages;
-        rust-pkg = rust-bin.stable."1.88.0".default.override {
-          extensions = [ "rust-src" ];
-          targets = [ "x86_64-pc-windows-gnu" ];
-        };
+        rust-pkg = rust-bin.stable."1.88.0".default;
         deps = import ./deps.nix { inherit pkgs; };
       in
       {
