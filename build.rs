@@ -1,51 +1,14 @@
-#[path = ".build/tao.rs"]
-mod tao;
+use std::io::BufRead;
 
 fn main(){
-    let binary_name = "basement";
-    let external_dir = "deps";
-    let build_dir = "build";
-    let toolchain_file = "mingw-w64-toolchain.cmake";
-    let cc = "x86_64-w64-mingw32-g++";
+    let mut cmd = std::process::Command::new("./test.sh");
+    cmd.stdout(std::process::Stdio::piped());
+    let mut child = cmd.spawn().unwrap();
 
-    let fmt_build_path = std::path::PathBuf::from(format!("{}/fmt/install", build_dir));
-    match std::fs::create_dir_all(&fmt_build_path){
-        Ok(_) => {},
-        Err(e) => {
-            if e.kind() != std::io::ErrorKind::AlreadyExists {
-                println!("{}", e.to_string());
-            }
+    if let Some(output) = child.stdout.take(){
+        let mut reader = std::io::BufReader::new(output);
+        for line in reader.lines(){
+            println!("{}", line.unwrap());
         }
-    };
-
-    println!("configuring fmt...");
-    let mut fmt_config_step = std::process::Command::new("cmake");
-    fmt_config_step.arg("-S").arg(format!("{}/fmt", external_dir));
-    fmt_config_step.arg("-B").arg(format!("{}/fmt", build_dir));
-    let toolchain_file_path = std::fs::canonicalize(std::path::PathBuf::from(toolchain_file)).unwrap().to_string_lossy().to_string();
-    fmt_config_step.arg(format!("-DCMAKE_TOOLCHAIN_FILE={}", toolchain_file_path));
-    fmt_config_step.arg("-DFMT_TEST=OFF");
-    fmt_config_step.arg(format!("-DCMAKE_INSTALL_PREFIX={}/fmt/install", build_dir));
-    fmt_config_step.output().unwrap();
-
-    println!("building fmt...");
-    let mut fmt_build_step = std::process::Command::new("cmake");
-    fmt_build_step.arg("--build").arg(format!("{}/fmt", build_dir));
-    fmt_build_step.output().unwrap();
-
-    println!("installing fmt...");
-    let mut fmt_install_step = std::process::Command::new("cmake");
-    fmt_install_step.arg("--install").arg(format!("{}/fmt", build_dir));
-    fmt_install_step.output().unwrap();
-
-    println!("building {}...", binary_name);
-    let mut build_step = std::process::Command::new(cc);
-    build_step.arg("src/main.cpp");
-    build_step.arg(format!("-I{}/fmt/install/include", build_dir));
-    build_step.arg(format!("-L{}/fmt/install/lib", build_dir));
-    build_step.arg("-lfmt");
-    build_step.arg("-static").arg("-static-libstdc++");
-    build_step.arg("-o").arg(format!("{}/{}", build_dir, binary_name));
-    let output = build_step.output().unwrap();
-    println!("{:#?}", output);
+    }
 }
