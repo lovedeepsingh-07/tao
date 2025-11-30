@@ -21,7 +21,7 @@
       {
         formatter = pkgs.nixfmt-classic;
         devShells.default = cross-pkgs.mkShell {
-          nativeBuildInputs = [ pkgs.cmake rust-pkg pkgs.pkg-config pkgs.bear];
+          nativeBuildInputs = [ pkgs.cmake rust-pkg pkgs.pkg-config pkgs.bear ];
           buildInputs = [ cross-pkgs.windows.pthreads ];
 		  shellHook = ''zsh'';
         };
