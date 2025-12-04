@@ -1,5 +1,6 @@
 # tao
 
+> total absolute order
 > "masochism"
 
-total absolute order
+build system framework
