@@ -5,6 +5,8 @@ build:
 
 run: build
 	@./build/basement
+runw: build
+	@wine ./build/basement
 
 fmt:
 	rustfmt ./_build.rs ./.build/tao.rs

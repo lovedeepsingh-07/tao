@@ -4,13 +4,6 @@ mod tao;
 fn build() -> Result<(), String> {
     tao::begin()?;
 
-    tao::create_cmd(
-        "build-fmt",
-        Box::new(|| {
-            tao::debug::info("building fmt...");
-        }),
-    );
-
     let mut basement = tao::create_executable(tao::ExecutableConfig {
         cc: "g++".to_string(),
         name: "basement".to_string(),
@@ -18,15 +11,6 @@ fn build() -> Result<(), String> {
         build_dir: "build".to_string(),
     })?;
 
-    let fmt_build_path = std::path::PathBuf::from("build/fmt/install");
-    match std::fs::create_dir_all(&fmt_build_path) {
-        Ok(_) => {}
-        Err(e) => {
-            if e.kind() != std::io::ErrorKind::AlreadyExists {
-                tao::debug::error(&e.to_string());
-            }
-        }
-    };
     let mut fmt_lib = tao::create_library(tao::LibraryConfig {
         build_system: tao::BuildSystem::CMAKE,
         name: "fmt".to_string(),

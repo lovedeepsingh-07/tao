@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     io::BufRead,
     sync::{Mutex, OnceLock},
 };
@@ -8,21 +7,11 @@ use std::{
 // -------- global state --------
 // ------------------------------
 #[derive(Debug)]
-struct TaoState {
-    cmd_list: HashMap<String, CmdCallback>,
-    cmd_args: Vec<String>,
-}
+struct TaoState {}
 static TAO_STATE: OnceLock<Mutex<TaoState>> = OnceLock::new();
 
 pub fn begin() -> Result<(), String> {
-    let cmd_args = std::env::args()
-        .map(|arg| arg.to_string())
-        .collect::<Vec<String>>();
-
-    let set_result = TAO_STATE.set(Mutex::new(TaoState {
-        cmd_list: HashMap::new(),
-        cmd_args,
-    }));
+    let set_result = TAO_STATE.set(Mutex::new(TaoState {}));
     match set_result {
         Ok(_) => {}
         Err(_) => {
@@ -35,16 +24,7 @@ pub fn begin() -> Result<(), String> {
 }
 pub fn end() -> Result<(), String> {
     let mut mutex_gaurd = TAO_STATE.get().unwrap().lock().unwrap();
-    let TaoState { cmd_list, cmd_args } = &mut *mutex_gaurd;
-
-    debug::debug(&format!("{:#?}", cmd_list));
-    debug::debug(&format!("{:#?}", cmd_args));
-
-    if let Some(cmd_arg) = cmd_args.get(1) {
-        if let Some(run_cmd) = cmd_list.get(cmd_arg) {
-            (run_cmd.0)();
-        }
-    }
+    let _ = &mut *mutex_gaurd;
 
     Ok(())
 }
@@ -70,26 +50,6 @@ pub mod debug {
         let flag_str = "\x1b[91m[ERROR]\x1b[0m";
         println!("{} {}", flag_str, input);
     }
-}
-
-// ----------------------------
-// -------- commands ----------
-// ----------------------------
-#[allow(non_camel_case_types)]
-pub type CmdCallback_Signature = Box<dyn Fn() + Send + Sync>;
-pub struct CmdCallback(pub CmdCallback_Signature);
-
-impl std::fmt::Debug for CmdCallback {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Callback: Box<dyn Fn() + Send + Sync>")
-    }
-}
-
-pub fn create_cmd(name: &str, callback: CmdCallback_Signature) {
-    let mut mutex_gaurd = TAO_STATE.get().unwrap().lock().unwrap();
-    let TaoState { cmd_list, .. } = &mut *mutex_gaurd;
-
-    cmd_list.insert(String::from(name), CmdCallback(callback));
 }
 
 // ------------------------
@@ -138,30 +98,23 @@ pub struct ExecutableConfig {
     pub source_file: String,
     pub build_dir: String,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Executable {
-    cmd: std::process::Command,
     config: ExecutableConfig,
-    dependencies: Vec<Library>
+    dependencies: Vec<Library>,
 }
 impl Executable {
     pub fn link_library(&mut self, lib: Library) -> Result<(), String> {
-        let build_dir = format!("{}/{}", &lib.config.build_dir, &lib.config.name);
-        self.cmd.arg(&format!("-I{}/install/include", &build_dir));
-        self.cmd.arg(&format!("-L{}/install/lib", &build_dir));
-        self.cmd.arg("-lfmt");
         self.dependencies.push(lib);
         Ok(())
     }
 }
 
 pub fn create_executable(config: ExecutableConfig) -> Result<Executable, String> {
-    let mut cmd = std::process::Command::new(&config.cc);
-    cmd.arg("-std=c++23");
-    cmd.arg(&config.source_file);
-    cmd.arg("-o")
-        .arg(format!("{}/{}", &config.build_dir, &config.name));
-    Ok(Executable { cmd, config, dependencies: Vec::new() })
+    Ok(Executable {
+        config,
+        dependencies: Vec::new(),
+    })
 }
 
 // ------------------------------
@@ -187,40 +140,56 @@ fn _run_cmd(cmd: &mut std::process::Command) -> Result<(), String> {
 pub fn install(target: &mut Target) -> Result<(), String> {
     match target {
         Target::Executable(exec) => {
-            let _ = exec.config;
+            let mut cmd = std::process::Command::new(&exec.config.cc);
+            cmd.arg("-std=c++23");
+            cmd.arg(&exec.config.source_file);
+            cmd.arg("-o")
+                .arg(format!("{}/{}", &exec.config.build_dir, &exec.config.name));
 
             for dep in &exec.dependencies {
+                let build_dir = format!("{}/{}", &dep.config.build_dir, &dep.config.name);
+                let fmt_build_path = std::path::PathBuf::from(format!("{}/install", build_dir));
+                match std::fs::create_dir_all(&fmt_build_path) {
+                    Ok(_) => {}
+                    Err(e) => {
+                        if e.kind() != std::io::ErrorKind::AlreadyExists {
+                            return Err(e.to_string());
+                        }
+                    }
+                };
+
+                cmd.arg(&format!("-I{}/install/include", &build_dir));
+                cmd.arg(&format!("-L{}/install/lib", &build_dir));
+                cmd.arg(&format!("-l{}", &dep.config.name));
+
                 let mut target = Target::Library(dep.clone());
                 install(&mut target)?;
             }
-
-            _run_cmd(&mut exec.cmd)?;
+            _run_cmd(&mut cmd)?;
         }
-        Target::Library(lib) => {
-            match lib.config.build_system {
-                BuildSystem::CMAKE => {
-                    let build_dir = format!("{}/{}", &lib.config.build_dir, &lib.config.name);
+        Target::Library(lib) => match lib.config.build_system {
+            BuildSystem::CMAKE => {
+                let build_dir = format!("{}/{}", &lib.config.build_dir, &lib.config.name);
 
-                    let mut cmd = std::process::Command::new("cmake");
-                    cmd.arg("-S").arg(&lib.config.source_dir);
-                    cmd.arg("-B").arg(&build_dir);
-                    cmd.arg(format!("-DCMAKE_INSTALL_PREFIX={}/install", &build_dir));
-                    cmd.arg("-DCMAKE_INSTALL_LIBDIR=lib");
-                    for i in &lib.config.extra_arguments {
-                        cmd.arg(format!("-D{}={}", i.0, i.1));
-                    }
-                    _run_cmd(&mut cmd)?;
-
-                    let mut fmt_build_step = std::process::Command::new("cmake");
-                    fmt_build_step.arg("--build").arg(&build_dir);
-                    _run_cmd(&mut fmt_build_step)?;
-
-                    let mut fmt_install_step = std::process::Command::new("cmake");
-                    fmt_install_step.arg("--install").arg(&build_dir);
-                    _run_cmd(&mut fmt_install_step)?;
+                let mut cmd = std::process::Command::new("cmake");
+                cmd.arg("-S").arg(&lib.config.source_dir);
+                cmd.arg("-B").arg(&build_dir);
+                cmd.arg(format!("-DCMAKE_INSTALL_PREFIX={}/install", &build_dir));
+                cmd.arg("-DCMAKE_INSTALL_LIBDIR=lib");
+                for i in &lib.config.extra_arguments {
+                    cmd.arg(format!("-D{}={}", i.0, i.1));
                 }
+                _run_cmd(&mut cmd)?;
+
+                let mut fmt_build_step = std::process::Command::new("cmake");
+                fmt_build_step.arg("--build").arg(&build_dir);
+                _run_cmd(&mut fmt_build_step)?;
+
+                let mut fmt_install_step = std::process::Command::new("cmake");
+                fmt_install_step.arg("--install").arg(&build_dir);
+                _run_cmd(&mut fmt_install_step)?;
             }
-        }
+        },
     }
 
     Ok(())
