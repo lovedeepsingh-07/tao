@@ -34,8 +34,8 @@ fn build() -> Result<(), String> {
         build_dir: "build".to_string(),
         extra_arguments: vec![("FMT_TEST".to_string(), "OFF".to_string())],
     })?;
-    basement.link_library(fmt_lib)?;
 
+    basement.link_library(fmt_lib)?;
     tao::install(&mut tao::Target::Executable(basement))?;
 
     tao::end()?;

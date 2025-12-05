@@ -11,18 +11,14 @@
   outputs = { ... }@inputs:
     inputs.flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import inputs.nixpkgs { inherit system; overlays = []; };
-        cross-pkgs = pkgs.pkgsCross.mingwW64;
-        rust-bin = inputs.rust-overlay.lib.mkRustBin { }
-          pkgs.pkgsCross.mingwW64.buildPackages;
-        rust-pkg = rust-bin.stable."1.88.0".default;
+        pkgs = import inputs.nixpkgs { inherit system; overlays = [(import inputs.rust-overlay)]; };
+        rust-pkg = pkgs.rust-bin.stable."1.88.0".default;
         deps = import ./deps.nix { inherit pkgs; };
       in
       {
         formatter = pkgs.nixfmt-classic;
-        devShells.default = cross-pkgs.mkShell {
+        devShells.default = pkgs.mkShell {
           nativeBuildInputs = [ pkgs.cmake rust-pkg pkgs.pkg-config pkgs.bear ];
-          buildInputs = [ cross-pkgs.windows.pthreads ];
 		  shellHook = ''zsh'';
         };
         apps.setup = inputs.flake-utils.lib.mkApp {

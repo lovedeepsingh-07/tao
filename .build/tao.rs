@@ -104,7 +104,7 @@ pub enum Target {
 // ------------------------------
 // -------- build system --------
 // ------------------------------
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum BuildSystem {
     CMAKE,
 }
@@ -112,7 +112,7 @@ pub enum BuildSystem {
 // -------------------------
 // -------- library --------
 // -------------------------
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LibraryConfig {
     pub build_system: BuildSystem,
     pub name: String,
@@ -120,7 +120,7 @@ pub struct LibraryConfig {
     pub build_dir: String,
     pub extra_arguments: Vec<(String, String)>,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Library {
     config: LibraryConfig,
 }
@@ -131,7 +131,7 @@ pub fn create_library(config: LibraryConfig) -> Result<Library, String> {
 // ----------------------------
 // -------- executable --------
 // ----------------------------
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ExecutableConfig {
     pub cc: String,
     pub name: String,
@@ -142,6 +142,7 @@ pub struct ExecutableConfig {
 pub struct Executable {
     cmd: std::process::Command,
     config: ExecutableConfig,
+    dependencies: Vec<Library>
 }
 impl Executable {
     pub fn link_library(&mut self, lib: Library) -> Result<(), String> {
@@ -149,7 +150,7 @@ impl Executable {
         self.cmd.arg(&format!("-I{}/install/include", &build_dir));
         self.cmd.arg(&format!("-L{}/install/lib", &build_dir));
         self.cmd.arg("-lfmt");
-        install(&mut Target::Library(lib))?;
+        self.dependencies.push(lib);
         Ok(())
     }
 }
@@ -160,7 +161,7 @@ pub fn create_executable(config: ExecutableConfig) -> Result<Executable, String>
     cmd.arg(&config.source_file);
     cmd.arg("-o")
         .arg(format!("{}/{}", &config.build_dir, &config.name));
-    Ok(Executable { cmd, config })
+    Ok(Executable { cmd, config, dependencies: Vec::new() })
 }
 
 // ------------------------------
@@ -187,7 +188,12 @@ pub fn install(target: &mut Target) -> Result<(), String> {
     match target {
         Target::Executable(exec) => {
             let _ = exec.config;
-            debug::info(&format!("{:#?}", exec));
+
+            for dep in &exec.dependencies {
+                let mut target = Target::Library(dep.clone());
+                install(&mut target)?;
+            }
+
             _run_cmd(&mut exec.cmd)?;
         }
         Target::Library(lib) => {
@@ -199,6 +205,7 @@ pub fn install(target: &mut Target) -> Result<(), String> {
                     cmd.arg("-S").arg(&lib.config.source_dir);
                     cmd.arg("-B").arg(&build_dir);
                     cmd.arg(format!("-DCMAKE_INSTALL_PREFIX={}/install", &build_dir));
+                    cmd.arg("-DCMAKE_INSTALL_LIBDIR=lib");
                     for i in &lib.config.extra_arguments {
                         cmd.arg(format!("-D{}={}", i.0, i.1));
                     }
