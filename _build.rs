@@ -4,29 +4,39 @@ mod tao;
 fn build() -> Result<(), String> {
     tao::begin()?;
 
-    tao::create_cmd("build", Box::new(|| {
-        println!("tao is saying hello!");
-    }));
+    tao::create_cmd(
+        "build-fmt",
+        Box::new(|| {
+            tao::debug::info("building fmt...");
+        }),
+    );
 
-    tao::create_cmd("build", Box::new(|| {
-        println!("tao is saying hello but again!");
-    }));
-
-    let mut exec_c = tao::create_executable(tao::ExecutableConfig {
-        cc: "gcc".to_string(),
-        name: "basement_c".to_string(),
-        source_file: "src/main.c".to_string(),
-        build_dir: "build".to_string(),
-    })?;
-    tao::install(&mut exec_c)?;
-
-    let mut exec_cpp = tao::create_executable(tao::ExecutableConfig {
+    let mut basement = tao::create_executable(tao::ExecutableConfig {
         cc: "g++".to_string(),
-        name: "basement_cpp".to_string(),
+        name: "basement".to_string(),
         source_file: "src/main.cpp".to_string(),
         build_dir: "build".to_string(),
     })?;
-    tao::install(&mut exec_cpp)?;
+
+    let fmt_build_path = std::path::PathBuf::from("build/fmt/install");
+    match std::fs::create_dir_all(&fmt_build_path) {
+        Ok(_) => {}
+        Err(e) => {
+            if e.kind() != std::io::ErrorKind::AlreadyExists {
+                tao::debug::error(&e.to_string());
+            }
+        }
+    };
+    let mut fmt_lib = tao::create_library(tao::LibraryConfig {
+        build_system: tao::BuildSystem::CMAKE,
+        name: "fmt".to_string(),
+        source_dir: "deps/fmt".to_string(),
+        build_dir: "build".to_string(),
+        extra_arguments: vec![("FMT_TEST".to_string(), "OFF".to_string())],
+    })?;
+    basement.link_library(fmt_lib)?;
+
+    tao::install(&mut tao::Target::Executable(basement))?;
 
     tao::end()?;
     Ok(())
@@ -36,7 +46,7 @@ fn main() {
     match build() {
         Ok(_) => {}
         Err(e) => {
-            eprintln!("{}", e.to_string());
+            tao::debug::error(&e.to_string());
         }
     }
 }
