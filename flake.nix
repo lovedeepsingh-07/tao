@@ -18,7 +18,7 @@
       {
         formatter = pkgs.nixfmt-classic;
         devShells.default = pkgs.mkShell {
-          nativeBuildInputs = [ pkgs.cmake rust-pkg pkgs.pkg-config pkgs.bear ];
+          nativeBuildInputs = [ pkgs.cmake pkgs.ninja rust-pkg pkgs.pkg-config pkgs.bear ];
 		  shellHook = ''zsh'';
         };
         apps.setup = inputs.flake-utils.lib.mkApp {
