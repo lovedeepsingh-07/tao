@@ -1,12 +1,11 @@
-build:
-	@mkdir -p build
-	@rustc ./_build.rs -o build/tao_build
-	@./build/tao_build
+build example:
+	@mkdir -p build/examples/{{example}}
+	@rustc tao.rs --crate-name=tao --crate-type=lib -o build/libtao.rlib
+	@rustc examples/{{example}}/_build.rs -Lbuild -o build/examples/{{example}}/tao_build
 
-run: build
-	@./build/basement
-runw: build
-	@wine ./build/basement
+run example: (build example)
+	@cd examples/{{example}} && ../../build/examples/{{example}}/tao_build
+	@ninja -C build/examples/{{example}} -f build.ninja
 
 fmt:
-	rustfmt ./_build.rs ./.build/tao.rs
+	rustfmt ./*.rs
