@@ -8,6 +8,7 @@ fn build() -> Result<(), String> {
         build_dir: "../../build/examples/basic_c".to_string(),
     })?;
     tao::install(&mut tao::Target::Executable(basement))?;
+
     Ok(())
 }
 
