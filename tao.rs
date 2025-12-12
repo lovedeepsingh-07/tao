@@ -98,19 +98,23 @@ pub fn create_library(config: LibraryConfig) -> Result<Library, String> {
 #[derive(Debug)]
 pub struct ExecutableConfig<'a> {
     pub cc: &'a str,
-    pub name: &'a str,
+    pub binary: &'a str,
     pub source_files: Vec<&'a str>,
     pub includes: Vec<&'a str>,
     pub build_dir: &'a str,
+    pub build_flags: Vec<&'a str>,
+    pub link_flags: Vec<&'a str>,
 }
 #[allow(non_camel_case_types)]
 #[derive(Debug, Default)]
 struct Internal_ExecutableConfig {
     pub cc: String,
-    pub name: String,
+    pub binary: String,
     pub source_files: Vec<String>,
     pub includes: Vec<String>,
     pub build_dir: String,
+    pub build_flags: Vec<String>,
+    pub link_flags: Vec<String>,
 }
 #[derive(Debug, Default)]
 pub struct Executable {
@@ -175,7 +179,9 @@ pub fn create_executable(config: ExecutableConfig) -> Result<Executable, String>
         }
     }
 
-    final_config.name = String::from(config.name);
+    final_config.binary = String::from(config.binary);
+    final_config.build_flags = config.build_flags.into_iter().map(|flag| flag.to_string()).collect();
+    final_config.link_flags = config.link_flags.into_iter().map(|flag| flag.to_string()).collect();
     Ok(Executable {
         config: final_config,
         dependencies: Vec::new(),
@@ -191,11 +197,23 @@ pub fn install(target: &mut Target) -> Result<(), String> {
             let mut ninja_file_str = String::new();
 
             ninja_file_str.push_str(&format!("BUILD_DIR = {}\n", &exec.config.build_dir));
-            ninja_file_str.push_str(&format!("BINARY = {}\n", &exec.config.name));
-            ninja_file_str.push_str("BUILD_FLAGS = -std=c23\n");
+            ninja_file_str.push_str(&format!("BINARY = {}\n", &exec.config.binary));
+
+            ninja_file_str.push_str("BUILD_FLAGS = ");
+            for curr_flag in &exec.config.build_flags {
+                ninja_file_str.push_str(&format!("{} ", curr_flag));
+            }
+            ninja_file_str.push_str("\n");
+
+            ninja_file_str.push_str("LINK_FLAGS = ");
+            for curr_flag in &exec.config.link_flags {
+                ninja_file_str.push_str(&format!("{} ", curr_flag));
+            }
+            ninja_file_str.push_str("\n");
+
             ninja_file_str.push_str("INCLUDES = ");
             for curr_include in &exec.config.includes {
-                ninja_file_str.push_str(&format!("-I{}", curr_include));
+                ninja_file_str.push_str(&format!("-I{} ", curr_include));
             }
             ninja_file_str.push_str("\n");
             ninja_file_str.push_str("\n");
@@ -208,7 +226,7 @@ pub fn install(target: &mut Target) -> Result<(), String> {
             ));
 
             ninja_file_str.push_str("rule link\n");
-            ninja_file_str.push_str(&format!("    command = {} $in -o $out\n", exec.config.cc));
+            ninja_file_str.push_str(&format!("    command = {} ${{LINK_FLAGS}} $in -o $out\n", exec.config.cc));
             ninja_file_str.push_str("\n");
 
             for curr_file in &exec.config.source_files {
