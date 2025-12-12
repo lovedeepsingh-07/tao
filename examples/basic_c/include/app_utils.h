@@ -1,3 +1,3 @@
 #include <stdio.h>
 
-void hello() { printf("hello from app_utils.h\n"); }
+void utils_hello();
