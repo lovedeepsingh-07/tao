@@ -24,7 +24,43 @@ pub mod debug {
 // -----------------------
 // -------- utils --------
 // -----------------------
+#[macro_export]
+macro_rules! string_vec {
+    ($($input_str:expr),*) => {
+        {
+            let mut output_vec = Vec::new();
+            $(
+                output_vec.push($input_str.to_string());
+            )*
+            output_vec
+        }
+    }
+}
 pub mod utils {
+    // ----- get_files_with_ext ------
+    pub fn get_files_with_ext(folder: &str, ext: &str) -> Result<Vec<String>, String> {
+        let folder_path = std::path::Path::new(folder);
+        let mut output_vec = Vec::new();
+
+        for entry in std::fs::read_dir(folder_path).map_err(|e| e.to_string())? {
+            let entry = entry.map_err(|e| e.to_string())?;
+            let entry_path_buf = entry.path();
+            let entry_path = std::path::Path::new(&entry_path_buf);
+
+            if entry_path.is_file() {
+                if let Some(entry_ext) = entry_path.extension() {
+                    if entry_ext == ext {
+                        output_vec.push(entry_path.to_string_lossy().to_string());
+                    }
+                }
+            }
+            if entry_path.is_dir() {
+                output_vec.extend(get_files_with_ext(&entry_path.to_string_lossy().to_string(), ext)?);
+            }
+        }
+
+        Ok(output_vec)
+    }
     // ------ does_command_exist ------
     pub fn does_command_exist(cmd: &str) -> Option<String> {
         match std::process::Command::new("which").arg(cmd).output() {
@@ -95,19 +131,8 @@ pub fn create_library(config: LibraryConfig) -> Result<Library, String> {
 // ----------------------------
 // -------- executable --------
 // ----------------------------
-#[derive(Debug)]
-pub struct ExecutableConfig<'a> {
-    pub cc: &'a str,
-    pub binary: &'a str,
-    pub source_files: Vec<&'a str>,
-    pub includes: Vec<&'a str>,
-    pub build_dir: &'a str,
-    pub build_flags: Vec<&'a str>,
-    pub link_flags: Vec<&'a str>,
-}
-#[allow(non_camel_case_types)]
 #[derive(Debug, Default)]
-struct Internal_ExecutableConfig {
+pub struct ExecutableConfig {
     pub cc: String,
     pub binary: String,
     pub source_files: Vec<String>,
@@ -118,7 +143,7 @@ struct Internal_ExecutableConfig {
 }
 #[derive(Debug, Default)]
 pub struct Executable {
-    config: Internal_ExecutableConfig,
+    config: ExecutableConfig,
     dependencies: Vec<Library>,
 }
 impl Executable {
@@ -130,24 +155,27 @@ impl Executable {
 
 // ------ create_executable ------
 pub fn create_executable(config: ExecutableConfig) -> Result<Executable, String> {
-    let mut final_config = Internal_ExecutableConfig::default();
+    let mut final_config = ExecutableConfig::default();
 
     // check if `cc` command exists
-    match utils::does_command_exist(config.cc) {
+    match utils::does_command_exist(&config.cc) {
         Some(cmd) => {
             final_config.cc = cmd;
         }
         None => {
-            return Err(format!("executable {:#?} does not exist", config.cc));
+            return Err(format!("executable {:#?} does not exist", &config.cc));
         }
     }
 
     // check if `source_files` exists
     // TODO: this does not check if it is a file
-    for curr_file in config.source_files {
+    for curr_file in &config.source_files {
         match utils::does_file_exist(curr_file) {
-            Some(file_path) => {
-                final_config.source_files.push(file_path.to_string());
+            Some(_) => {
+                // TODO: here we don't replace the source_file with it's absolute path because we
+                // need the relative path later on while creating the file structure for the object
+                // files, that needs to be fixed
+                final_config.source_files.push(curr_file.clone());
             }
             None => {
                 return Err(format!("file {:#?} does not exist", curr_file));
@@ -157,7 +185,7 @@ pub fn create_executable(config: ExecutableConfig) -> Result<Executable, String>
 
     // check if `includes` exists
     // TODO: this does not check if it is a folder
-    for curr_folder in config.includes {
+    for curr_folder in &config.includes {
         match utils::does_file_exist(curr_folder) {
             Some(file_path) => {
                 final_config.includes.push(file_path.to_string());
@@ -170,18 +198,18 @@ pub fn create_executable(config: ExecutableConfig) -> Result<Executable, String>
 
     // check if `build_dir` exists
     // TODO: if `build_dir` does not exist, then we must create it
-    match utils::does_file_exist(config.build_dir) {
+    match utils::does_file_exist(&config.build_dir) {
         Some(file_path) => {
             final_config.build_dir = file_path;
         }
         None => {
-            return Err(format!("folder {:#?} does not exist", config.build_dir));
+            return Err(format!("folder {:#?} does not exist", &config.build_dir));
         }
     }
 
-    final_config.binary = String::from(config.binary);
-    final_config.build_flags = config.build_flags.into_iter().map(|flag| flag.to_string()).collect();
-    final_config.link_flags = config.link_flags.into_iter().map(|flag| flag.to_string()).collect();
+    final_config.binary = config.binary;
+    final_config.build_flags = config.build_flags;
+    final_config.link_flags = config.link_flags;
     Ok(Executable {
         config: final_config,
         dependencies: Vec::new(),
@@ -235,27 +263,21 @@ pub fn install(target: &mut Target) -> Result<(), String> {
                 obj_file_path.set_extension("o");
                 ninja_file_str.push_str(&format!(
                     "build ${{BUILD_DIR}}/obj/{}: cc {}\n",
-                    obj_file_path
-                        .file_name()
-                        .unwrap()
-                        .to_string_lossy()
-                        .to_string(),
-                    &curr_file
+                    obj_file_path.to_string_lossy().to_string(),
+                    std::fs::canonicalize(&curr_file).unwrap().to_string_lossy().to_string(),
                 ));
             }
             ninja_file_str.push_str("\n");
 
-            ninja_file_str.push_str("build ${BUILD_DIR}/${BINARY}: link ");
+            if !exec.config.source_files.is_empty() {
+                ninja_file_str.push_str("build ${BUILD_DIR}/${BINARY}: link ");
+            }
             for curr_file in &exec.config.source_files {
                 let mut obj_file_path = std::path::PathBuf::from(&curr_file);
                 obj_file_path.set_extension("o");
                 ninja_file_str.push_str(&format!(
                     "${{BUILD_DIR}}/obj/{} ",
-                    obj_file_path
-                        .file_name()
-                        .unwrap()
-                        .to_string_lossy()
-                        .to_string()
+                    obj_file_path.to_string_lossy().to_string()
                 ));
             }
             ninja_file_str.push_str("\n");

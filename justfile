@@ -1,3 +1,6 @@
+setup:
+	nix run .#setup
+
 build example:
 	@mkdir -p build/examples/{{example}}
 	@rustc tao.rs --crate-name=tao --crate-type=lib -o build/libtao.rlib

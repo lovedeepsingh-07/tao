@@ -12,11 +12,17 @@ let
     rev = "1c3f9fa135cafa494af760c4cd0541c9a23cdf60";
     sha256 = "sha256-bJzuF/5UFIHewQFyCDDPrkh6eyEUv4AYAzmkkV/WjjI=";
   };
-in
-{
+  clay = pkgs.fetchFromGitHub {
+    owner = "nicbarker";
+    repo = "clay";
+    rev = "b25a31c1a152915cd7dd6796e6592273e5a10aac";
+    sha256 = "sha256-6h1aQXqwzPc4oPuid3RfV7W0WzQFUiddjW7OtkKM0P8=";
+  };
+in {
   setup_script = ''
-    mkdir -p deps
+    mkdir -p deps/clay
     cp -r ${fmt} deps/fmt
     cp -r ${raylib} deps/raylib
+	cp -r ${clay} deps/clay/clay
   '';
 }
