@@ -1,0 +1,13 @@
+[workspace]
+resolver = "3"
+members = ["./crates/tao"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+
+[workspace.dependencies]
+tokio = { version = "1.49.0", features = ["full"] }
+
+[profile.dev]
+incremental = true

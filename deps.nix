@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-let
+{pkgs, ...}: let
   fmt = pkgs.fetchFromGitHub {
     owner = "fmtlib";
     repo = "fmt";
@@ -20,9 +19,9 @@ let
   };
 in {
   setup_script = ''
-    mkdir -p deps/clay
-    cp -r ${fmt} deps/fmt
-    cp -r ${raylib} deps/raylib
-	cp -r ${clay} deps/clay/clay
+       mkdir -p deps/clay
+       cp -r ${fmt} deps/fmt
+       cp -r ${raylib} deps/raylib
+    cp -r ${clay} deps/clay/clay
   '';
 }
