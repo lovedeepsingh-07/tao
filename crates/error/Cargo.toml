@@ -1,0 +1,16 @@
+[package]
+name = "error"
+version = { workspace = true }
+edition = { workspace = true }
+
+[features]
+axum = ["dep:axum"]
+sqlx = ["dep:sqlx"]
+tokio = ["dep:tokio"]
+
+[dependencies]
+axum = { workspace = true, optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
