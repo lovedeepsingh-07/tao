@@ -9,16 +9,20 @@ pub use environment::Environment;
 pub use state::ServerState;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tower_http::cors;
 
 pub async fn run(db_url: &str, app_env: &str, server_port: u16) -> Result<(), error::Error> {
-    let server_state = Arc::new(RwLock::new(
-        ServerState::new(db_url, Environment::from(app_env)).await?,
-    ));
+    let app_env = Environment::from(app_env);
+    let server_state = ServerState::new(db_url, app_env.clone()).await?;
 
-    let router = axum::Router::new()
+    let mut router = axum::Router::new()
         .route("/health", routing::get(routes::health))
         .fallback(routes::frontend::static_handler)
-        .with_state(server_state);
+        .with_state(Arc::new(RwLock::new(server_state.clone())));
+
+    if matches!(app_env, Environment::DEV) {
+        router = router.layer(cors::CorsLayer::permissive());
+    }
 
     let listener = tokio::net::TcpListener::bind((constants::SERVER_ADDRESS, server_port)).await?;
     log::info!(

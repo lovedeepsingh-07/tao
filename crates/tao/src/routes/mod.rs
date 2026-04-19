@@ -1,5 +1,5 @@
-pub mod frontend;
 pub mod api;
+pub mod frontend;
 
 use crate::state;
 use axum::response::IntoResponse;
@@ -21,7 +21,7 @@ pub async fn health(
         Ok(_) => {
             tokio::time::sleep(std::time::Duration::from_secs(5)).await;
             "type shi".to_string()
-        },
+        }
         Err(e) => {
             log::error!("Health check failed: {}", e);
             "DB ERROR".to_string()

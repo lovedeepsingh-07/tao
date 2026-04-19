@@ -1,4 +1,7 @@
-use axum::{response::{self, IntoResponse}, http};
+use axum::{
+    http,
+    response::{self, IntoResponse},
+};
 use rust_embed::Embed;
 
 static INDEX_HTML: &str = "index.html";
