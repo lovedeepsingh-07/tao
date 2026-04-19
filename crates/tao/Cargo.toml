@@ -9,7 +9,9 @@ clap = { workspace = true, features = ["derive"] }
 env_logger = { workspace = true }
 error = { path = "../error", features = ["axum", "sqlx", "tokio"] }
 log = { workspace = true }
+mime_guess = { workspace = true }
 rstest = { workspace = true }
+rust-embed = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 sqlx = { workspace = true, features = ["runtime-tokio", "postgres"] }

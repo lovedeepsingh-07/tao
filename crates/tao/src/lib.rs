@@ -17,6 +17,7 @@ pub async fn run(db_url: &str, app_env: &str, server_port: u16) -> Result<(), er
 
     let router = axum::Router::new()
         .route("/health", routing::get(routes::health))
+        .fallback(routes::frontend::static_handler)
         .with_state(server_state);
 
     let listener = tokio::net::TcpListener::bind((constants::SERVER_ADDRESS, server_port)).await?;
