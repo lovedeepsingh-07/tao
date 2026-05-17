@@ -3,6 +3,7 @@ pub mod constants;
 pub mod environment;
 pub mod routes;
 pub mod state;
+pub mod schema;
 
 use axum::routing;
 pub use environment::Environment;
@@ -16,7 +17,7 @@ pub async fn run(db_url: &str, app_env: &str, server_port: u16) -> Result<(), er
     let server_state = ServerState::new(db_url, app_env.clone()).await?;
 
     let mut router = axum::Router::new()
-        .route("/health", routing::get(routes::health))
+        .route("/health", routing::get(routes::api::health))
         .fallback(routes::frontend::static_handler)
         .with_state(Arc::new(RwLock::new(server_state.clone())));
 

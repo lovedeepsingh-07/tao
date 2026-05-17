@@ -1,20 +1,21 @@
 export PUBLIC_APP_ENV := "development"
-export PUBLIC_API_URL := "http://localhost:6969"
 
-run:
-	PUBLIC_APP_RUN_METHOD="embedded" \
-		cargo run -p tao
+default:
+	@just -l
+
+run $PUBLIC_APP_RUN_METHOD="embedded":
+	doppler run -- cargo run -p tao
+
+run_tui:
+	cargo run -p tao_tui
 
 [working-directory: "./frontend"]
-run_frontend:
-	PUBLIC_APP_RUN_METHOD="api" \
-		bun run dev
+run_frontend $PUBLIC_APP_RUN_METHOD="api" $PUBLIC_API_URL="http://localhost:6969":
+		yarn run dev
 
 [working-directory: "./frontend"]
-build_frontend:
-	PUBLIC_APP_RUN_METHOD="api" \
-	bun run build
-
+build_frontend $PUBLIC_APP_RUN_METHOD="embedded":
+	yarn run build
 
 test:
 	cargo test
@@ -27,4 +28,3 @@ lint:
 fmt:
 	@alejandra .
 	@cargo fmt
-

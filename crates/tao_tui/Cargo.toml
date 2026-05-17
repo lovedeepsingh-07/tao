@@ -1,0 +1,14 @@
+[package]
+name = "tao_tui"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+crossterm = { workspace = true }
+error = { path = "../error", features = ["sqlx", "tokio"] }
+log = { workspace = true }
+ratatui = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+sqlx = { workspace = true, features = ["runtime-tokio", "postgres"] }
+tokio = { workspace = true, features = ["full"] }

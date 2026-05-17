@@ -4,16 +4,16 @@
   ...
 }: {
   default = pkgs.mkShell {
-    nativeBuildInputs = [
+    packages = [
       pkgs.alejandra
       rust_pkg
-      pkgs.bun
+      pkgs.yarn-berry_4
+      pkgs.yarn-berry_4.yarn-berry-fetcher
       pkgs.pkg-config
       pkgs.jq
       pkgs.lld
       pkgs.clang
-    ];
-    buildInputs = [
+	  pkgs.sqlx-cli
     ];
     shellHook = ''zsh'';
   };

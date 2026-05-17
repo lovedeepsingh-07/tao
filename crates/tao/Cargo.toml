@@ -14,7 +14,12 @@ rstest = { workspace = true }
 rust-embed = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-sqlx = { workspace = true, features = ["runtime-tokio", "postgres"] }
+sqlx = { workspace = true, features = [
+  "runtime-tokio",
+  "postgres",
+  "macros",
+  "migrate",
+] }
 tokio = { workspace = true, features = ["full"] }
 tower-http = { workspace = true, features = ["cors"] }
 uuid = { workspace = true, features = ["v4"] }
