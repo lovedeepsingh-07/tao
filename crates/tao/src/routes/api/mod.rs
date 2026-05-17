@@ -1,3 +1,9 @@
+mod report_post;
+mod report_get;
+
+pub use report_post::route as report_post;
+pub use report_get::route as report_get;
+
 use crate::state;
 use axum::response::IntoResponse;
 use std::sync::Arc;
@@ -16,6 +22,7 @@ pub async fn health(
         .await
     {
         Ok(_) => {
+            // TODO: simulating latency, only for development
             tokio::time::sleep(std::time::Duration::from_secs(5)).await;
             "type shi".to_string()
         }

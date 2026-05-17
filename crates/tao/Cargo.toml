@@ -5,6 +5,7 @@ edition = { workspace = true }
 
 [dependencies]
 axum = { workspace = true, features = ["macros"] }
+chrono = { workspace = true, features = ["serde"] }
 clap = { workspace = true, features = ["derive"] }
 env_logger = { workspace = true }
 error = { path = "../error", features = ["axum", "sqlx", "tokio"] }
@@ -19,7 +20,9 @@ sqlx = { workspace = true, features = [
   "postgres",
   "macros",
   "migrate",
+  "chrono",
+  "uuid",
 ] }
 tokio = { workspace = true, features = ["full"] }
 tower-http = { workspace = true, features = ["cors"] }
-uuid = { workspace = true, features = ["v4"] }
+uuid = { workspace = true, features = ["v4", "serde"] }
