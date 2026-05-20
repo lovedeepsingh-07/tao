@@ -11,5 +11,7 @@ fn app(terminal: &mut ratatui::DefaultTerminal) -> std::io::Result<()> {
 
 #[tokio::main]
 async fn main() {
+    // let file_path = std::fs::canonicalize(std::path::PathBuf::from(file!())).unwrap();
+    // println!("{}:{}:{}", file_path.to_string_lossy(), line!(), column!());
     ratatui::run(app).unwrap();
 }

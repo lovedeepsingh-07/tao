@@ -2,8 +2,8 @@ POST http://localhost:6969/api/report HTTP/1.1
 Content-Type: application/json
 
 {
-	"body": "this is some info shit",
-	"kind": "info"
+	"body": "okay what the fuck is happening",
+	"kind": "error"
 }
 
 ###

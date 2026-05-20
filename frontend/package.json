@@ -33,7 +33,8 @@
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.1",
-    "vite": "^8.0.7"
+    "vite": "^8.0.7",
+    "vite-plugin-checker": "^0.13.0"
   },
   "dependencies": {
     "@lucide/svelte": "^1.8.0",
