@@ -1,8 +1,12 @@
-mod report_post;
-mod report_get;
+mod project;
+mod report;
 
-pub use report_post::route as report_post;
-pub use report_get::route as report_get;
+pub use project::delete as project_delete;
+pub use project::get_all as project_get_all;
+pub use project::get_one as project_get_one;
+pub use project::post as project_post;
+pub use report::get as report_get;
+pub use report::post as report_post;
 
 use crate::state;
 use axum::response::IntoResponse;

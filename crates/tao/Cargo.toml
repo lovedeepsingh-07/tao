@@ -26,3 +26,6 @@ sqlx = { workspace = true, features = [
 tokio = { workspace = true, features = ["full"] }
 tower-http = { workspace = true, features = ["cors"] }
 uuid = { workspace = true, features = ["v4", "serde"] }
+
+[build-dependencies]
+vergen-git2 = { workspace = true }

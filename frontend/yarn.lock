@@ -2237,6 +2237,7 @@ __metadata:
     typescript-eslint: "npm:^8.58.1"
     vite: "npm:^8.0.7"
     vite-plugin-checker: "npm:^0.13.0"
+    zod: "npm:^4.4.3"
   languageName: unknown
   linkType: soft
 
@@ -2561,5 +2562,12 @@ __metadata:
   version: 1.1.4
   resolution: "zimmerframe@npm:1.1.4"
   checksum: 10c0/9470cbf22cefae975ab413c7158a119d082b354ddcf0da48a842f2f42246fa15943cd9b92c047de39db38015e3b866e32f383bc217e8e4f4192945c7d425536b
+  languageName: node
+  linkType: hard
+
+"zod@npm:^4.4.3":
+  version: 4.4.3
+  resolution: "zod@npm:4.4.3"
+  checksum: 10c0/7ea31b558e88f9faf44f31dd185e2e1cbf51fed3081787fb96cc2534749b50c0acfc6da7f0922a7353ed092dd358c7d50c28ea96c94d04af64191bd33152eca3
   languageName: node
   linkType: hard

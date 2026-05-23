@@ -19,12 +19,16 @@ pub async fn run(db_url: &str, app_env: &str, server_port: u16) -> Result<(), er
     let mut router = axum::Router::new()
         .route("/api/health", routing::get(routes::api::health))
         .route(
-            "/api/report",
-            routing::post(routes::api::report_post),
+            "/api/project",
+            routing::get(routes::api::project_get_all).post(routes::api::project_post),
         )
         .route(
-            "/api/report",
-            routing::get(routes::api::report_get),
+            "/api/project/{project_id}",
+            routing::get(routes::api::project_get_one).delete(routes::api::project_delete),
+        )
+        .route(
+            "/api/project/{project_id}/report",
+            routing::get(routes::api::report_get).post(routes::api::report_post),
         )
         .fallback(routes::frontend::static_handler)
         .with_state(Arc::new(RwLock::new(server_state.clone())));

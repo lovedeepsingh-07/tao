@@ -1,6 +1,13 @@
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
+pub struct Project {
+    #[serde(default)]
+    pub id: uuid::Uuid,
+    pub slug: String,
+    pub name: String,
+}
+
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize, sqlx::Type)]
-#[sqlx(type_name = "TEXT", rename_all = "lowercase")]
-#[serde(rename_all = "lowercase")]
+#[sqlx(type_name = "TEXT")]
 pub enum ReportKind {
     #[default]
     DEBUG,
@@ -13,8 +20,20 @@ pub enum ReportKind {
 pub struct Report {
     #[serde(default)]
     pub id: uuid::Uuid,
+    pub project_id: uuid::Uuid,
+
     #[serde(default)]
-    pub created_at: chrono::DateTime<chrono::Utc>,
+    pub reported_at: chrono::DateTime<chrono::Utc>,
+    #[serde(default)]
+    pub received_at: chrono::DateTime<chrono::Utc>,
+
+    pub release: String,
+
     pub body: String,
+    pub stack_trace: Option<String>,
     pub kind: ReportKind,
+
+    pub memory_usage: i32,
+    pub cpu_percent: f64,
+    pub disk_usage_percent: f64,
 }

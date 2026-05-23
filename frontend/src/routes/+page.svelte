@@ -1,50 +1,52 @@
 <script lang="ts">
 	import type { PageProps } from "./$types";
-	let { data }: PageProps = $props();
+	import type { Project } from "$lib/models";
+	import type { ZodSafeParseResult } from "zod";
+	import { PUBLIC_APP_RUN_METHOD } from "$env/static/public";
+	import { env } from "$env/dynamic/public";
+	import { delete_project } from "$lib";
 
-	const get_report_colors = (kind: string): string => {
-		switch (kind) {
-			case "debug":
-				return "bg-blue-500 text-black";
-				break;
-			case "info":
-				return "bg-green-500 text-black";
-				break;
-			case "warn":
-				return "bg-yellow-500 text-black";
-				break;
-			case "error":
-				return "bg-red-500 text-black";
-				break;
-		}
+	export const handle_delete_button_click = async (project_id: string) => {
+		const result = await delete_project(
+			fetch,
+			PUBLIC_APP_RUN_METHOD,
+			project_id,
+			env.PUBLIC_API_URL
+		);
 	};
+
+	let { data }: PageProps = $props();
 </script>
 
-{#await data.reports}
-	<p>Loading...</p>
-{:then reports}
-	<div class="mt-[20px] mb-[50px] flex flex-col">
-		{#each reports as report}
-			{@const created_at = new Date(report.created_at)}
-			<div class="flex items-center justify-start gap-[12px]">
-				<div
-					class={`flex w-full max-w-[248px] items-center justify-start gap-[12px] border border-primary p-2 ${get_report_colors(report.kind)}`}
-				>
-					<p>
-						{created_at.getDate()}/{created_at.getMonth()}/{created_at.getFullYear()}:{created_at
-							.getHours()
-							.toString()
-							.padStart(2, "0")}:{created_at.getMinutes().toString().padStart(2, "0")}:{created_at
-							.getSeconds()
-							.toString()
-							.padStart(2, "0")}
-					</p>
-					<p class="">
-						{report.kind.toUpperCase()}
-					</p>
+<button
+	class="fixed right-[20px] bottom-[20px] rounded rounded-lg border bg-primary px-2 py-1 text-primary-foreground hover:bg-primary/80"
+	onclick={handle_create_project_click}
+>
+	New Project</button
+>
+{#await data.project_list}
+	<p>loading...</p>
+{:then result: ZodSafeParseResult<Project[]>}
+	{#if result.success !== true}
+		<p>unable to parse data sent from the server</p>
+	{:else}
+		<div class="flex flex-col items-start p-4">
+			{#each result.data as project: Project}
+				<div class="flex items-center justify-start gap-[10px]">
+					<button
+						class="ixed right-[20px] bottom-[20px] rounded rounded-lg border bg-destructive px-2 py-1 text-destructive-foreground hover:bg-destructive/80"
+						onclick={async () => {
+							await handle_delete_button_click(project.id);
+						}}>X</button
+					>
+					<a
+						class="rounded rounded-lg border border-primary px-4 py-2"
+						href={`/project/${project.id}`}
+					>
+						{project.slug} - {project.name}
+					</a>
 				</div>
-				<div>{report.body}</div>
-			</div>
-		{/each}
-	</div>
+			{/each}
+		</div>
+	{/if}
 {/await}
