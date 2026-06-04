@@ -24,4 +24,5 @@ CREATE TABLE IF NOT EXISTS report (
 	CONSTRAINT FOREIGN_KEY_PROJECT FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE
 );
 
+CREATE INDEX index_reported_at ON report(reported_at);
 CREATE INDEX index_received_at ON report(received_at);

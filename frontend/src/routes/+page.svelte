@@ -5,15 +5,19 @@
 	import { PUBLIC_APP_RUN_METHOD } from "$env/static/public";
 	import { env } from "$env/dynamic/public";
 	import { delete_project } from "$lib";
+	import { invalidateAll } from "$app/navigation";
 
-	export const handle_delete_button_click = async (project_id: string) => {
+	const handle_delete_button_click = async (project_id: string) => {
 		const result = await delete_project(
 			fetch,
 			PUBLIC_APP_RUN_METHOD,
 			project_id,
 			env.PUBLIC_API_URL
 		);
+		await invalidateAll();
 	};
+
+	const handle_create_project_click = async () => {};
 
 	let { data }: PageProps = $props();
 </script>
