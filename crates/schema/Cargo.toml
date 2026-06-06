@@ -1,0 +1,18 @@
+[package]
+name = "tao_schema"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+chrono = { workspace = true, features = ["serde"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+sqlx = { workspace = true, features = [
+  "runtime-tokio",
+  "postgres",
+  "macros",
+  "migrate",
+  "chrono",
+  "uuid",
+] }
+uuid = { workspace = true, features = ["v4", "serde"] }

@@ -49,14 +49,12 @@ pub async fn post(
         state.db_pool.clone()
     };
 
-    let project: schema::Project = sqlx::query_as::<_, schema::Project>(
-        "INSERT INTO project (slug, name) VALUES ($1, $2) RETURNING *",
-    )
-    .bind(&project.slug)
-    .bind(&project.name)
-    .fetch_one(&db_pool)
-    .await
-    .unwrap();
+    let project: schema::Project =
+        sqlx::query_as::<_, schema::Project>("INSERT INTO project (name) VALUES ($1) RETURNING *")
+            .bind(&project.name)
+            .fetch_one(&db_pool)
+            .await
+            .unwrap();
 
     axum::Json(project)
 }

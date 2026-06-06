@@ -44,15 +44,13 @@ export const create_project = async (
 	svelte_fetch: typeof fetch,
 	app_run_method: string,
 	project_name: string,
-	project_slug: string,
 	API_URL?: string
 ): Promise<ZodSafeParseResult<Project>> => {
 	const fetch_url: string = app_run_method == "api" ? `${API_URL}/api/project` : `/api/project`;
 	const res: Response = await svelte_fetch(fetch_url, {
 		method: "POST",
 		body: JSON.stringify({
-			name: project_name,
-			slug: project_slug
+			name: project_name
 		}),
 		headers: { "Content-Type": "application/json" }
 	});
