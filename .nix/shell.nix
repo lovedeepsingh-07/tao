@@ -13,7 +13,7 @@
       pkgs.jq
       pkgs.lld
       pkgs.clang
-	  pkgs.sqlx-cli
+      pkgs.sqlx-cli
     ];
     shellHook = ''zsh'';
   };
