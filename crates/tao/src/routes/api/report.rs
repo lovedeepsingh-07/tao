@@ -34,13 +34,14 @@ pub async fn post(
         state.db_pool.clone()
     };
 
-    let report: schema::Report = sqlx::query_as::<_, schema::Report>("INSERT INTO report (project_id, reported_at, body, location, level, memory_usage, cpu_percent) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *")
+    let report: schema::Report = sqlx::query_as::<_, schema::Report>("INSERT INTO report (project_id, reported_at, body, location, level, used_memory, total_memory, cpu_percent) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *")
         .bind(&uuid::Uuid::parse_str(&project_id).unwrap())
         .bind(&report.reported_at)
         .bind(&report.body)
         .bind(&report.location)
         .bind(&report.level)
-        .bind(&report.memory_usage)
+        .bind(&report.used_memory)
+        .bind(&report.total_memory)
         .bind(&report.cpu_percent)
         .fetch_one(&db_pool)
         .await

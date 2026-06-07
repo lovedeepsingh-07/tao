@@ -85,12 +85,7 @@ where
     }
 }
 
-pub async fn init<S>(
-    root_crate: String,
-    api_url: String,
-    project_id: uuid::Uuid,
-    subscriber: S,
-)
+pub async fn init<S>(root_crate: String, api_url: String, project_id: uuid::Uuid, subscriber: S)
 where
     S: tracing::Subscriber + Send + Sync + 'static,
 {
@@ -102,7 +97,14 @@ where
 
     tokio::spawn(async move {
         let client = rq::Client::new();
-        while let Some(report) = rx.recv().await {
+        let mut system = sysinfo::System::new_all();
+
+        while let Some(mut report) = rx.recv().await {
+            system.refresh_memory();
+            system.refresh_cpu_usage();
+            report.used_memory = (system.used_memory() / 1000) as i32;
+            report.total_memory = (system.total_memory() / 1000) as i32;
+            report.cpu_percent = system.global_cpu_usage() as f64;
             client
                 .post(&format!("{}/api/project/{}/report", &api_url, project_id))
                 .json(&report)

@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS report (
 	location TEXT NOT NULL,
 	level TEXT CHECK (level IN ('TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR')) NOT NULL,
 
-	memory_usage INT,
+	used_memory INT,
+	total_memory INT,
 	cpu_percent FLOAT,
 
 	CONSTRAINT FOREIGN_KEY_PROJECT FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE

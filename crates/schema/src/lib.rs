@@ -31,6 +31,7 @@ pub struct Report {
     pub location: String,
     pub level: ReportLevel,
 
-    pub memory_usage: i32,
+    pub used_memory: i32,
+    pub total_memory: i32,
     pub cpu_percent: f64,
 }

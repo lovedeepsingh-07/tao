@@ -17,7 +17,8 @@ export const ReportModel = z.object({
 	body: z.string().default(""),
 	location: z.string(),
 	level: ReportLevelModel,
-	memory_usage: z.number(),
+	used_memory: z.number(),
+	total_memory: z.number(),
 	cpu_percent: z.number()
 });
 export type Report = z.infer<typeof ReportModel>;
