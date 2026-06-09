@@ -28,21 +28,21 @@ pub async fn post(
     axum::extract::Path(project_id): axum::extract::Path<String>,
     axum::extract::Json(report): axum::extract::Json<schema::Report>,
 ) -> impl IntoResponse {
+    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
     let db_pool = {
         let state = server_state.read().await;
         state.db_pool.clone()
     };
 
-    let report: schema::Report = sqlx::query_as::<_, schema::Report>("INSERT INTO report (project_id, reported_at, release, body, stack_trace, kind, memory_usage, cpu_percent, disk_usage_percent) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *")
+    let report: schema::Report = sqlx::query_as::<_, schema::Report>("INSERT INTO report (project_id, reported_at, body, location, level, used_memory, total_memory, cpu_percent) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *")
         .bind(&uuid::Uuid::parse_str(&project_id).unwrap())
         .bind(&report.reported_at)
-        .bind(&report.release)
         .bind(&report.body)
-        .bind(&report.stack_trace)
-        .bind(&report.kind)
-        .bind(&report.memory_usage)
+        .bind(&report.location)
+        .bind(&report.level)
+        .bind(&report.used_memory)
+        .bind(&report.total_memory)
         .bind(&report.cpu_percent)
-        .bind(&report.disk_usage_percent)
         .fetch_one(&db_pool)
         .await
         .unwrap();

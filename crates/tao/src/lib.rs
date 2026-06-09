@@ -2,12 +2,13 @@ pub mod cli;
 pub mod constants;
 pub mod environment;
 pub mod routes;
-pub mod schema;
 pub mod state;
 
-use axum::routing;
 pub use environment::Environment;
 pub use state::ServerState;
+pub use tao_schema as schema;
+
+use axum::routing;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tower_http::cors;

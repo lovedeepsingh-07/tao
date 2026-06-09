@@ -25,12 +25,16 @@
         };
         rust_pkg = pkgs.rust-bin.stable."1.88.0".default;
         crane_lib = (inputs.crane.mkLib pkgs).overrideToolchain rust_pkg;
-      in {
+      in rec {
         devShells = import ./.nix/shell.nix {inherit pkgs rust_pkg;};
-        packages = import ./.nix/package.nix {
+        packages = import ./.nix/package {
           inherit pkgs crane_lib;
           gitignore = inputs.gitignore;
         };
+		apps.default = {
+			type=  "app";
+			program = "${packages.default}/bin/tao";
+		};
       }
     );
 }

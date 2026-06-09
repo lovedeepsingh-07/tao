@@ -16,7 +16,8 @@
   build_inputs = [];
   common_args = {
     pname = package_name;
-    src = crane_lib.cleanCargoSource src;
+	inherit src;
+    # src = crane_lib.cleanCargoSource src;
     version = package_version;
     strictDeps = true;
     doCheck = false;
@@ -27,11 +28,24 @@
     buildInputs = build_inputs;
   };
   cargo_artifacts = crane_lib.buildDepsOnly common_args;
-in {
-  default = crane_lib.buildPackage (common_args
-    // rec {
+in rec {
+  frontend = pkgs.callPackage ./frontend.nix {
+    inherit gitignore;
+    yarn_berry = pkgs.yarn-berry_4;
+    frontend_src = ../../frontend;
+  };
+  default = crane_lib.mkCargoDerivation (common_args
+    // {
       pname = package_name;
-      cargoExtraArgs = "-p ${pname}";
       cargoArtifacts = cargo_artifacts;
+      preBuild = ''
+         	mkdir -p frontend/build
+        cp -r ${frontend}/dist/* frontend/build/
+      '';
+      buildPhaseCargoCommand = "cargo build -p ${package_name} --release";
+      installPhase = ''
+         	mkdir -p $out/bin
+        cp -r target/release/${package_name} $out/bin/
+      '';
     });
 }

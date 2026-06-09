@@ -23,6 +23,7 @@ sqlx = { workspace = true, features = [
   "chrono",
   "uuid",
 ] }
+tao_schema = { path = "../schema" }
 tokio = { workspace = true, features = ["full"] }
 tower-http = { workspace = true, features = ["cors"] }
 uuid = { workspace = true, features = ["v4", "serde"] }
