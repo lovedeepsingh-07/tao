@@ -8,7 +8,7 @@ export const fetch_health = async (
 	app_run_method: string,
 	API_URL?: string
 ): Promise<string> => {
-	const fetch_url: string = app_run_method == "api" ? `${API_URL}/health` : "/health";
+	const fetch_url: string = app_run_method == "api" ? `${API_URL}/api/health` : "/api/health";
 	const res: Response = await svelte_fetch(fetch_url);
 	const data: string = await res.text();
 	return data;

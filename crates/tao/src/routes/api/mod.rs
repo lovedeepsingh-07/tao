@@ -25,6 +25,7 @@ pub async fn health(
         .fetch_one(&db_pool)
         .await
     {
+		// TODO: remove this 'type shi'
         Ok(_) => {
             // TODO: simulating latency, only for development
             tokio::time::sleep(std::time::Duration::from_secs(5)).await;
